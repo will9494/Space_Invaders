@@ -1,5 +1,18 @@
 #include <ncurses.h>
 #include <string.h>
+#include <stdlib.h>
+
+/*****DEFINICIONES*****/
+
+void print_menu(WINDOW *menu_win, int highlight);
+void pantalla_bienvenida();
+void pantalla_menu();
+void pantalla_espera();
+void pantalla_juego();
+void pantalla_fin();
+void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w3, WINDOW *w4);
+
+/*****GLOBALES*****/
 
 char *choices[] = {
     "       JUGADOR ROJO       ",
@@ -7,13 +20,10 @@ char *choices[] = {
     "           SALIR          ",
 };
 int n_choices = sizeof(choices) / sizeof(char *);
-void print_menu(WINDOW *menu_win, int highlight);
 
-void pantalla_bienvenida();
-void pantalla_menu();
-void pantalla_espera();
-void pantalla_juego();
-void pantalla_fin();
+int choice = 0;
+
+/*****FUNCIONES*****/
 
 void pantalla_bienvenida(){
     /***
@@ -59,7 +69,6 @@ void pantalla_bienvenida(){
     int yl6 = LINES/2 - 5;
     int yl7 = LINES/2 - 4;
     int yl8 = LINES/2 - 3;
-
 
     int x2 = (COLS - strlen(msg1))/2;
     int y2 = LINES/2;
@@ -112,7 +121,6 @@ void pantalla_bienvenida(){
 void pantalla_menu(){
     WINDOW *menu_win;
     int highlight = 1;
-    int choice = 0;
     int c;
 
     clear();
@@ -171,12 +179,9 @@ void pantalla_menu(){
             break;
     }
 
-    //mvprintw(23, 0, "You chose choice %d with choice string %s\n", choice, choices[choice - 1]);
-    //clrtoeol();
-    //refresh();
-
     if(choice == 3){
         endwin();
+        exit(0);
     }else{
         getch();
     }
@@ -231,69 +236,86 @@ void pantalla_espera(){
 
 void pantalla_juego(){
     WINDOW *margen;
-    refresh();
     margen = newwin(36, 60, 0, 0);
-    box(margen, 0 , 0);
-    wrefresh(margen);
-     keypad(margen, TRUE);
+    //box(margen, 0 , 0);
+    keypad(margen, TRUE);
 
     WINDOW *margen2;
-    refresh();
     margen2 = newwin(12, 25, 0, 60);
     box(margen2, 0 , 0);
-    wrefresh(margen2);
+    //wrefresh(margen2);
 
     WINDOW *margen3;
-    refresh();
     margen3 = newwin(12, 25, 12, 60);
     box(margen3, 0 , 0);
-    wrefresh(margen3);
+    //wrefresh(margen3);
 
     WINDOW *margen4;
-    refresh();
     margen4 = newwin(12, 25, 24, 60);
     box(margen4, 0 , 0);
-    wrefresh(margen4);
+    //wrefresh(margen4);
 
     init_pair(1, COLOR_WHITE, COLOR_RED);
     init_pair(2, COLOR_WHITE, COLOR_BLUE);
     init_pair(3, COLOR_WHITE, COLOR_GREEN);
 
-    //Jugador Rojo
+    char nave[] = "<----+---->";
+    mvwprintw(margen,33,26,nave);
+
+    //Jugador 2
     char msg1[] = "Vida: ";
-    mvprintw(3,65,"%s",msg1);
+    mvwprintw(margen2,3,5,msg1);
     char msg2[] = "Puntos: ";
-    mvprintw(6,65,"%s",msg2);
-    attron(COLOR_PAIR(1));
-    char msg3[] = " Jugador Rojo ";
-    mvprintw(8,67,"%s",msg3);
-    attroff(COLOR_PAIR(1));
+    mvwprintw(margen2,6,5,"%s",msg2);
+
+    int ch;
+    char *msg3;
+    if(choice != 1){
+        msg3 = " Jugador Rojo ";
+        ch = 1;
+    }else {
+        msg3 = " Jugador Azul ";
+        ch = 2;
+    }
+    wattron(margen2,COLOR_PAIR(ch));
+    mvwprintw(margen2,8,7,"%s",msg3);
+    wattroff(margen2,COLOR_PAIR(ch));
+
+    refresh();
 
     //Tiempo
-    attron(COLOR_PAIR(3));
+    wattron(margen3,COLOR_PAIR(3));
     char msgt1[] = " T I E M P O ";
-    mvprintw(16,66,"%s",msgt1);
-    attroff(COLOR_PAIR(3));
+    mvwprintw(margen3,4,6,"%s",msgt1);
+    wattroff(margen3,COLOR_PAIR(3));
     char msgt2[] = "00:00";
-    mvprintw(18,70,"%s",msgt2);
+    mvwprintw(margen3,6,10,"%s",msgt2);
 
-    //Jugador Azul
-    attron(COLOR_PAIR(2));
-    char msg11[] = " Jugador Azul ";
-    mvprintw(27,67,"%s",msg11);
-    attroff(COLOR_PAIR(2));
+    //Jugador 1
+    wattron(margen4,COLOR_PAIR(choice));
+    char *msg11;
+    if(choice == 1)
+        msg11 = " Jugador Rojo ";
+    else
+        msg11 = " Jugador Azul ";
+    mvwprintw(margen4,3,7,"%s",msg11);
+    wattroff(margen4,COLOR_PAIR(choice));
     char msg22[] = "Vida: ";
-    mvprintw(29,65,"%s",msg22);
+    mvwprintw(margen4,5,5,"%s",msg22);
     char msg33[] = "Puntos: ";
-    mvprintw(31,65,"%s",msg33);
+    mvwprintw(margen4,7,5,"%s",msg33);
+
+    wrefresh(margen);
+    wrefresh(margen2);
+    wrefresh(margen3);
+    wrefresh(margen4);
 
 
 
+    start_game(margen, margen2,margen3,margen4);
 
 
-    print_nave(margen,26, 33);
-
-    getch();
+    //getch();
 
 
     delwin(margen4);
@@ -359,11 +381,7 @@ void pantalla_fin(){
     mvprintw(y1,x1,"%s",msg1);
     mvprintw(y2,x2,"%s",msg2);
     mvprintw(y3,x3,"%s",msg3);
-
     mvprintw(y4,x4,"%s",msg4);
-   // mvprintw(y4,x4,"%s",msg3);
-   // mvprintw(y5,x5,"%s",msg4);
-
 
 
     WINDOW *margen2;

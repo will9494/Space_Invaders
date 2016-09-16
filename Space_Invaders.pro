@@ -1,7 +1,5 @@
-LIBS += -lncurses
-LIBS += -lpanel
-LIBS += -lmenu
-LIBS += -lform
+LIBS += -L/home/william/NCURSES/ncurses_custom/include -lncurses
+LIBS += -L/home/william/NCURSES/ncurses_custom/lib -lncurses
 LIBS += -pthread
 
 TEMPLATE = app
