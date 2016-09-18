@@ -11,7 +11,7 @@ void pantalla_menu();
 void pantalla_espera();
 void pantalla_juego();
 void pantalla_fin();
-void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w3, WINDOW *w4);
+void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w4);
 
 void write_share(int n_dato, int dato);
 
@@ -331,7 +331,7 @@ void pantalla_juego(){
     wrefresh(margen3);
     wrefresh(margen4);
 
-    start_game(margen, margen2,margen3,margen4);
+    start_game(margen,margen2,margen4);
 
     delwin(margen4);
     delwin(margen3);
@@ -435,4 +435,3 @@ void pantalla_fin(){
     delwin(margen);
     delwin(margen2);
 }
-

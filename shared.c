@@ -14,12 +14,16 @@ typedef union {
 }  semun;
 
 typedef struct {
+    int id;
     int x;
     int y;
+    int x2;
+    int y2;
     int tipo;
     int estado;
     int rango;
     int direccion;
+    int direccion2;
 } enemigo;
 
 /*****DEFINICIONES*****/
@@ -34,21 +38,20 @@ void eliminar_semaforo();
 void up_semaforo();
 void down_semaforo();
 int get_semaforo();
+
 void pre_region_critica();
 void post_region_critica();
 
 /*****GLOBALES*****/
 
+key_t key1 = 5678;
+key_t key2 = 7586;
+key_t key3 = 5768;
 int shmid;
 int shmid2;
 
-key_t key1 = 5678;
-key_t key2 = 7856;
-key_t key3 = 5786;
-
 extern int jugador;
 
-int *s_tiempo;
 int *s_activo1;
 int *s_activo2;
 int *s_color1;
@@ -68,9 +71,10 @@ int *s_v1;
 int *s_v2;
 int *s_p1;
 int *s_p2;
+
 enemigo *s_invasores;
 
-/*****MEMORIA COMPARTIDA(sizeof(int)*19) + (sizeof(int) * 6 * 20)*****/
+/*****MEMORIA COMPARTIDA*****/
 
 void die(char *s) {
     perror(s);
@@ -78,7 +82,7 @@ void die(char *s) {
 }
 
 void start_share() {
-    shmid = shmget(key1, (sizeof(int)*4), IPC_CREAT | 0666);
+    shmid = shmget(key1, (sizeof(int)), IPC_CREAT | 0666);
     //STATUS
     s_activo1 = (int *)shmat(shmid, NULL, 0);
     s_activo2 = s_activo1 + (sizeof(int) * 1);
@@ -124,8 +128,8 @@ void start_share() {
         *s_v2 = 5;
     }
 
-    //INVASORES
-    shmid2 = shmget(key3, (sizeof(enemigo)*20), IPC_CREAT | 0666);
+    //INVASORES 1
+    shmid2 = shmget(key3, (sizeof(enemigo)), IPC_CREAT | 0666);
     s_invasores = (enemigo *)shmat(shmid2, NULL, 0);
 }
 

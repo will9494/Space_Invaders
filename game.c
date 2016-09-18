@@ -5,12 +5,16 @@
 /*****STRUCTS*****/
 
 typedef struct {
+    int id;
     int x;
     int y;
+    int x2;
+    int y2;
     int tipo;
     int estado;
     int rango;
     int direccion;
+    int direccion2;
 } enemigo;
 
 typedef struct {
@@ -24,7 +28,7 @@ typedef struct {
 void *print_nave(void *win);
 void print_fila(int x, int y);
 void subtract_time (struct timespec * __restrict later, struct timespec * __restrict former);
-void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w3, WINDOW *w4);
+void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w4);
 void actualizar_disparos();
 void actualizar_filas();
 void check_colision();
@@ -41,6 +45,7 @@ struct timespec now;
 
 enemigo fila[25];
 int dir = 1;
+int ind = 0;
 int n = 0;
 
 extern int jugador;
@@ -65,7 +70,7 @@ extern enemigo *s_invasores;
 
 /*****FUNCIONES*****/
 
-void start_game(WINDOW* w1, WINDOW* w2, WINDOW* w3, WINDOW* w4){
+void start_game(WINDOW* w1, WINDOW* w2, WINDOW* w4){
     clock_gettime(CLOCK_MONOTONIC, &start);
     nodelay (stdscr, TRUE);
 
@@ -76,11 +81,11 @@ void start_game(WINDOW* w1, WINDOW* w2, WINDOW* w3, WINDOW* w4){
     int paused = 0;
     struct timespec prev = start;
 
-    print_fila(12,12);
-    print_fila(10,14);
+    print_fila(12,13);
+    print_fila(12,15);
     //print_fila(12,16);
-    print_fila(10,18);
-    print_fila(12,20);
+    print_fila(12,19);
+    print_fila(12,21);
 
     int puntos1;
     int vidas1;
@@ -146,7 +151,6 @@ void start_game(WINDOW* w1, WINDOW* w2, WINDOW* w3, WINDOW* w4){
     }
 
     pre_region_critica();
-
     post_region_critica();
 }
 
@@ -182,7 +186,7 @@ void *print_nave(void *win){
             }
             break;
         case KEY_LEFT:
-            if(x > 1){
+            if(x > 4){
                 x--;
                 x--;
                 xx = x + 11;
@@ -205,24 +209,13 @@ void *print_nave(void *win){
         mvprintw(y,xx,"%s","  ");
     }
 
-    int aux = 0;
-    int aux2 = 26;
-
-    if(x < 26){
-        aux = 26 - x;
-        aux2 += aux;
-    }else if(x > 26){
-        aux = x - 26;
-        aux2 -= aux;
-    }
-
     pre_region_critica();
 
     if(jugador == 1){
-        *s_x1 = aux2;
+        *s_x1 = x;
         mvprintw(3,*s_x2,"%s",nave);
     }else{
-        *s_x2 = aux2;
+        *s_x2 = x;
         mvprintw(3,*s_x1,"%s",nave);
     }
 
@@ -236,36 +229,27 @@ void *print_nave(void *win){
 }
 
 void actualizar_disparos() {
-    int delay = 80000;
 
     if(d.estado == 1 && d.y > 0){
         mvprintw(d.y, d.x + 5, "|");
         refresh();
     }
 
-    usleep(delay);
+    struct timespec reqtime;
+    reqtime.tv_sec = 0;
+    reqtime.tv_nsec = 70000000;
+    nanosleep(&reqtime, NULL);
 
     pre_region_critica();
-    int aux = 0;
-    int aux2 = 26;
-
-    if(d.x < 26){
-        aux = 26 - d.x;
-        aux2 += aux;
-    }else if(x > 26){
-        aux = d.x - 26;
-        aux2 -= aux;
-    }
-
     if(jugador == 1){
-        *s_dx1 = aux2;
+        *s_dx1 = d.x;
         *s_dy1 = 3 + 33 - d.y;
         *s_ds1 = d.estado;
 
         if(*s_ds2 == 1)
             mvprintw(*s_dy2, *s_dx2 + 5, "|");
     }else {
-        *s_dx2 = aux2;
+        *s_dx2 = d.x;
         *s_dy2 = 3 + 33 - d.y;
         *s_ds2 = d.estado;
 
@@ -304,18 +288,37 @@ void actualizar_disparos() {
 
 void print_fila(int x, int y) {
     int n_x = x;
-    usleep(200);
 
+    pre_region_critica();
     for(int i = 0; i < 5; i++){
-        pre_region_critica();
+
+        int j;
+        switch(y){
+            case 13:
+                j = 21;
+                break;
+            case 15:
+                j = 19;
+                break;
+            case 19:
+                j = 15;
+                break;
+            case 21:
+                j = 13;
+                break;
+        }
 
         enemigo e;
         e.estado = 1;
         e.tipo = 0;
         e.x = n_x;
-        e.y = y;
+        e.x2 = n_x;
+        e.y = j;
+        e.y2 = y;
         e.rango = 5;
         e.direccion = dir;
+        e.direccion2 = dir;
+        e.id = ind;
 
         if(i == 2){
             e.tipo = 1;
@@ -327,101 +330,162 @@ void print_fila(int x, int y) {
 
         s_invasores[n] = e;
         n++;
-
-        post_region_critica();
+        ind++;
     }
 
     dir *= -1;
-    n -= 5;
 
-    for(int j = 0; j < 5; j++){
-        pre_region_critica();
-
-        enemigo e = s_invasores[n];
-
-        if(e.tipo == 0){
-            mvprintw(y,e.x,"%s","\\-.-/");
-        }else{
-            mvprintw(y,e.x,"%s","(/--\\)");
-        }
-        refresh();
-
-        n++;
-
-        post_region_critica();
-    }
+    post_region_critica();
 }
 
 void actualizar_filas() {
 
-    for(int i=0; i<20; i++){
-        pre_region_critica();
+    pre_region_critica();
 
-        enemigo e = s_invasores[i];
+    if(jugador == 1) {
+        for(int i=0; i<20; i++){
+            enemigo e = s_invasores[i];
 
-        if(i%5 == 0)
-            mvprintw(e.y,0,"%s","                                                            ");
+            if(i%5 == 0)
+                mvprintw(e.y2,0,"%s","                                                            ");
 
-        if(e.estado == 0){
-            continue;
-        }else {
-            if(e.tipo == 0)
-                mvprintw(e.y,e.x,"%s","\\-.-/");
-            else
-                mvprintw(e.y,e.x,"%s","(/-\\)");
+            if(e.estado == 0){
+                continue;
+            }else {
+                if(e.tipo == 0)
+                    mvprintw(e.y2,e.x2,"%s","\\-.-/");
+                else
+                    mvprintw(e.y2,e.x2,"%s","(/-\\)");
 
-            if(e.direccion == -1)
-                e.x--;
-            else
-                e.x++;
+                if(e.direccion2 == -1)
+                    e.x2--;
+                else
+                    e.x2++;
 
-            if(e.x == 0 || e.x == 53)
-                e.direccion *= -1;
+                if(e.x2 == 0 || e.x2 == 53)
+                    e.direccion2 *= -1;
 
-            s_invasores[i] = e;
-
+                s_invasores[i] = e;
+            }
         }
 
-        post_region_critica();
+    }else{
+        for(int i=0; i<20; i++){
+            enemigo e = s_invasores[i];
+
+            if(i%5 == 0)
+                mvprintw(e.y,0,"%s","                                                            ");
+
+            if(e.estado == 0){
+                continue;
+            }else {
+                if(e.tipo == 0)
+                    mvprintw(e.y,e.x,"%s","\\-.-/");
+                else
+                    mvprintw(e.y,e.x,"%s","(/-\\)");
+
+                if(e.direccion == -1)
+                    e.x--;
+                else
+                    e.x++;
+
+                if(e.x == 0 || e.x == 53)
+                    e.direccion *= -1;
+
+                s_invasores[i] = e;
+
+            }
+        }
     }
+
+    post_region_critica();
 
     refresh();
 }
 
-
 void check_colision(){
-    for(int i=0; i<20; i++){
-        pre_region_critica();
 
-        enemigo e = s_invasores[i];
+    pre_region_critica();
+    if(jugador == 1){
 
-        if(e.estado){
-            if( d.x <= e.x && d.x > (e.x-e.rango) && d.y == e.y ){
-                d.estado = 0;
-                d.y = 0;
-                e.estado = 0;
-
-                s_invasores[i] = e;
-
-                if(e.tipo == 1){
-                    if(jugador == 1)
-                        *s_p1 += 15;
-                    else
-                        *s_p2 += 15;
-                }else{
-                    if(jugador == 1)
-                        *s_p1 += 10;
-                    else
-                        *s_p2 += 10;
-                }
-
-                break;
+        for(int i=0; i<20; i++){
+            enemigo e = s_invasores[i];
+            int j;
+            switch(e.y){
+                case 13:
+                    j = 21;
+                    break;
+                case 15:
+                    j = 19;
+                    break;
+                case 19:
+                    j = 15;
+                    break;
+                case 21:
+                    j = 13;
+                    break;
             }
-        }else{
-            continue;
+
+            if(e.estado){
+                if( d.x <= e.x && d.x > (e.x-e.rango) && d.y == j ){
+                    d.estado = 0;
+                    d.y = 0;
+                    e.estado = 0;
+
+                    s_invasores[i] = e;
+
+                    if(e.tipo == 1){
+                        if(jugador == 1)
+                            *s_p1 += 15;
+                        else
+                            *s_p2 += 15;
+                    }else{
+                        if(jugador == 1)
+                            *s_p1 += 10;
+                        else
+                            *s_p2 += 10;
+                    }
+
+                    break;
+                }
+            }else{
+                continue;
+            }
+
         }
 
-        post_region_critica();
+    }else {
+        for(int i=0; i<20; i++){
+            enemigo e = s_invasores[i];
+
+            if(e.estado){
+                if( d.x <= e.x && d.x > (e.x - e.rango) && d.y == e.y ){
+                    d.estado = 0;
+                    d.y = 0;
+                    e.estado = 0;
+
+                    s_invasores[i] = e;
+
+                    if(e.tipo == 1){
+                        if(jugador == 1)
+                            *s_p1 += 15;
+                        else
+                            *s_p2 += 15;
+                    }else{
+                        if(jugador == 1)
+                            *s_p1 += 10;
+                        else
+                            *s_p2 += 10;
+                    }
+
+                    break;
+                }
+            }else{
+                continue;
+            }
+        }
+
     }
+    post_region_critica();
 }
 

@@ -32,37 +32,35 @@ extern int *s_color2;
 /*****FUNCIONES*****/
 
 int main() {
-//    while(1){
-        inicializar_semaforo();
-        start_share();
 
-        initscr();
-        curs_set(FALSE);
-        noecho();
-        start_color();
+    inicializar_semaforo();
+    start_share();
 
-        pantalla_bienvenida();
-        pantalla_menu();
-        pantalla_espera();
+    initscr();
+    curs_set(FALSE);
+    noecho();
+    start_color();
 
-        if(*s_activo1 == -1)
-            *s_activo1 = 1;
-        else if(*s_activo2 == -1)
-            *s_activo2 = 1;
+    pantalla_bienvenida();
+    pantalla_menu();
+    pantalla_espera();
 
-        if(*s_activo1 != -1 && *s_activo2 != -1)
-            up_semaforo();
-        else
-            down_semaforo();
+    if(*s_activo1 == -1)
+        *s_activo1 = 1;
+    else if(*s_activo2 == -1)
+        *s_activo2 = 1;
 
-        eliminar_semaforo();
-        free_share();
+    if(*s_activo1 != -1 && *s_activo2 != -1)
+        up_semaforo();
+    else
+        down_semaforo();
 
-        pantalla_juego();
-        pantalla_fin();
-        endwin();
-//    }
+    eliminar_semaforo();
+    free_share();
 
+    pantalla_juego();
+    pantalla_fin();
+    endwin();
 
     return 0;
 }
