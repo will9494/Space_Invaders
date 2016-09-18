@@ -1,6 +1,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 /*****DEFINICIONES*****/
 
@@ -12,7 +13,11 @@ void pantalla_juego();
 void pantalla_fin();
 void start_game(WINDOW *w1, WINDOW *w2, WINDOW *w3, WINDOW *w4);
 
+void write_share(int n_dato, int dato);
+
 /*****GLOBALES*****/
+
+int jugador = 0;
 
 char *choices[] = {
     "       JUGADOR ROJO       ",
@@ -20,8 +25,16 @@ char *choices[] = {
     "           SALIR          ",
 };
 int n_choices = sizeof(choices) / sizeof(char *);
-
 int choice = 0;
+
+extern struct timespec now;
+
+extern int *s_color1;
+extern int *s_color2;
+extern int *s_v1;
+extern int *s_v2;
+extern int *s_p1;
+extern int *s_p2;
 
 /*****FUNCIONES*****/
 
@@ -105,12 +118,10 @@ void pantalla_bienvenida(){
     wrefresh(margen);
     wrefresh(margen2);
 
-    //Tecla Enter
-
     while(1) {
         char c = getch();
 
-        if(c == '\n')
+        if(c == 10)
             break;
     }
 
@@ -175,15 +186,28 @@ void pantalla_menu(){
 
         print_menu(menu_win, highlight);
 
-        if(choice != 0)	/* User did a choice come out of the infinite loop */
+        if(choice != 0)	{
+            if(*s_color1 == -1){
+                *s_color1 = choice;
+                jugador = 1;
+            }else if(*s_color1 != choice){
+                *s_color2 = choice;
+                jugador = 2;
+            }else{
+                if(choice == 1)
+                    choice = 2;
+                else
+                    choice = 1;
+                *s_color2 = choice;
+                jugador = 2;
+            }
             break;
+        }
     }
 
     if(choice == 3){
         endwin();
         exit(0);
-    }else{
-        getch();
     }
 }
 
@@ -211,6 +235,7 @@ void print_menu(WINDOW *menu_win, int highlight) {
 }
 
 void pantalla_espera(){
+    clear();
     WINDOW *margen;
     refresh();
     margen = newwin(36, 85, 0, 0);
@@ -219,18 +244,15 @@ void pantalla_espera(){
     char msg[] = "Esperando al otro jugador...";
     int x = (COLS - strlen(msg))/2;
     int y = LINES/2;
-    mvprintw(y,x,"%s",msg);
 
     WINDOW *margen2;
     int x_m2 = x - 2;
     int y_m2 = y - 2;
     margen2 = newwin(5, 33, y_m2, x_m2);
     box(margen2, 0 , 0);
+    mvwprintw(margen2,2,2,"%s",msg);
     wrefresh(margen2);
 
-    getch();
-
-    delwin(margen);
     delwin(margen2);
 }
 
@@ -280,7 +302,6 @@ void pantalla_juego(){
     wattron(margen2,COLOR_PAIR(ch));
     mvwprintw(margen2,8,7,"%s",msg3);
     wattroff(margen2,COLOR_PAIR(ch));
-
     refresh();
 
     //Tiempo
@@ -301,22 +322,16 @@ void pantalla_juego(){
     mvwprintw(margen4,3,7,"%s",msg11);
     wattroff(margen4,COLOR_PAIR(choice));
     char msg22[] = "Vida: ";
-    mvwprintw(margen4,5,5,"%s",msg22);
+    mvwprintw(margen4,7,5,"%s",msg22);
     char msg33[] = "Puntos: ";
-    mvwprintw(margen4,7,5,"%s",msg33);
+    mvwprintw(margen4,5,5,"%s",msg33);
 
     wrefresh(margen);
     wrefresh(margen2);
     wrefresh(margen3);
     wrefresh(margen4);
 
-
-
     start_game(margen, margen2,margen3,margen4);
-
-
-    //getch();
-
 
     delwin(margen4);
     delwin(margen3);
@@ -378,9 +393,30 @@ void pantalla_fin(){
     int x4 = (COLS - strlen(msg4))/2;
     int y4 = LINES/2 + 12;
 
-    mvprintw(y1,x1,"%s",msg1);
-    mvprintw(y2,x2,"%s",msg2);
-    mvprintw(y3,x3,"%s",msg3);
+    char *gsm1;
+    char *gsm2;
+    int gsm3;
+    if(*s_p1 > *s_p2){
+        gsm1 = "(Jugador 1)";
+        gsm3 = *s_p1;
+
+        if(*s_color1 == 1)
+            gsm2 = "ROJO";
+        else
+            gsm2 = "AZUL";
+    }else{
+        gsm1 = "(Jugador 2)";
+        gsm3 = *s_p2;
+
+        if(*s_color2 == 1)
+            gsm2 = "ROJO";
+        else
+            gsm2 = "AZUL";
+    }
+
+    mvprintw(y1,x1-5,"%s %s %s",msg1,gsm1,gsm2);
+    mvprintw(y2,x2,"%s %d",msg2,gsm3);
+    mvprintw(y3,x3,"%s %02d:%02d", msg3, now.tv_sec / 60 , now.tv_sec % 60);
     mvprintw(y4,x4,"%s",msg4);
 
 
@@ -391,8 +427,11 @@ void pantalla_fin(){
     box(margen2, 0 , 0);
     wrefresh(margen2);
 
-    getch();
-
+    while(1){
+        int ch = getch();
+        if(ch == 10)
+            break;
+    }
     delwin(margen);
     delwin(margen2);
 }

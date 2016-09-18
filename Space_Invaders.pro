@@ -9,6 +9,7 @@ CONFIG -= qt
 
 SOURCES += main.c \
     game.c \
-    frame.c
+    frame.c \
+    shared.c
 
 DISTFILES +=
